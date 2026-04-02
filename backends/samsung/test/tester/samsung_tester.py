@@ -12,10 +12,7 @@ import torch
 from executorch.backends.samsung.partition.enn_partitioner import EnnPartitioner
 from executorch.backends.samsung.quantizer.quantizer import EnnQuantizer, Precision
 from executorch.backends.samsung.test.utils import RuntimeExecutor
-from executorch.backends.samsung.utils.export_utils import (
-    get_edge_compile_config,
-    get_enn_pass_list,
-)
+from executorch.backends.samsung.utils.export_utils import get_edge_compile_config
 from executorch.backends.test.harness import Tester as TesterBase
 from executorch.backends.test.harness.stages import StageType
 from executorch.backends.transforms.decompose_sdpa import (
@@ -97,7 +94,7 @@ class ToEdgeTransformAndLower(BaseStages.ToEdgeTransformAndLower):
         compile_specs = compile_specs or []
         self.partitioners = [EnnPartitioner(compile_specs=compile_specs)]
         self.edge_compile_config = edge_compile_config or get_edge_compile_config()
-        self.transform_passes = transform_passes or get_enn_pass_list()
+        self.transform_passes = transform_passes
         self.edge_dialect_program = None
 
     def run(
