@@ -1,4 +1,4 @@
-# Copyright (c) Samsung Electronics Co. LTD
+# Copyright (c) 2025 Samsung Electronics Co. LTD
 # All rights reserved
 #
 # Licensed under the BSD License (the "License"); you may not use this file
@@ -13,8 +13,11 @@ from executorch.backends.samsung.serialization.compile_options import (
     gen_samsung_backend_compile_spec,
 )
 from executorch.backends.samsung.test.tester import SamsungTester
+from executorch.backends.samsung.test.utils.datasets import get_quant_test_data_classify
+from executorch.backends.samsung.test.utils.quant_checkers import CheckerConfig
 from executorch.backends.samsung.test.utils.utils import TestConfig
 from executorch.examples.models.inception_v4 import InceptionV4Model
+from torchvision import transforms
 
 
 def patch_iv4(weight_path: str):
@@ -65,4 +68,37 @@ class TestMilestoneInceptionV4(unittest.TestCase):
             .to_edge_transform_and_lower()
             .to_executorch()
             .run_method_and_compare_outputs(inputs=example_input, atol=0.02, rtol=0.02)
+        )
+
+    def test_inception_v4_a8w8(self):
+        transform_compose = transforms.Compose(
+            [
+                transforms.Resize((299, 299)),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+                transforms.Lambda(lambda x: x.unsqueeze(0)),  # Add batch dim
+            ]
+        )
+        example_input, cali, testdata = get_quant_test_data_classify(
+            os.path.join(os.environ["DATASET_PATH"], "imagenet_ptq_subset"),
+            transform_compose=transform_compose,
+        )
+        checker_config = CheckerConfig(
+            "classifier",
+            {
+                "dataset": testdata,
+            },
+        )
+        model = InceptionV4Model().get_eager_model()
+        tester = SamsungTester(
+            model, example_input, [gen_samsung_backend_compile_spec(TestConfig.chipset)]
+        )
+        (
+            tester.quantize(cali_dataset=cali, checker_config=checker_config)
+            .export()
+            .to_edge_transform_and_lower()
+            .to_executorch()
+            .run_method_and_compare_outputs(inputs=example_input, atol=1, rtol=1)
         )

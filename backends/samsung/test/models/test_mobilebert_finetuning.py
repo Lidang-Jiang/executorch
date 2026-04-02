@@ -1,4 +1,4 @@
-# Copyright (c) Samsung Electronics Co. LTD
+# Copyright (c) 2025 Samsung Electronics Co. LTD
 # All rights reserved
 #
 # Licensed under the BSD License (the "License"); you may not use this file
