@@ -391,6 +391,8 @@ fi
 # Qwen 3.5 MoE uses a prequantized checkpoint and custom export script
 if [ "$MODEL_NAME" = "qwen3_5_moe" ]; then
   pip install safetensors huggingface_hub
+  # turboquant-vllm requires python 3.12 or above, our CI is still on 3.10
+  # pip install turboquant-vllm==1.4.0
   pip install -r examples/models/qwen3_5_moe/requirements.txt
 
   # Download prequantized model outside OUTPUT_DIR to avoid uploading on failure
